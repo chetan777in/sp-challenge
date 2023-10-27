@@ -42,8 +42,6 @@ func repoSummary(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		fmt.Println("PULL COUNT", len(pulls))
-
 		for _, pull := range pulls {
 			if pull.UpdatedAt.After(time.Now().AddDate(0, 0, -7)) {
 				switch *pull.State {
