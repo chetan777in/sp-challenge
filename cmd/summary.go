@@ -12,13 +12,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	fromEmail string
-	toEmail   string
-	repoName  string
-	repoOwner string
-)
-
 // summaryCmd represents the summary command
 var summaryCmd = &cobra.Command{
 	Use:   "summary",
@@ -28,19 +21,18 @@ var summaryCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(summaryCmd)
-	summaryCmd.Flags().StringVarP(&fromEmail, "fromEmail", "f", "abc@gmail.com", "From email")
-	summaryCmd.Flags().StringVarP(&toEmail, "toEmail", "t", "xyz@gmail.com", "To email")
-	summaryCmd.Flags().StringVar(&repoName, "repoName", "rN", "Public repo Name")
-	summaryCmd.Flags().StringVar(&repoOwner, "repoOwner", "rO", "Public repo Owner")
+	initializeFlags(summaryCmd)
 }
 
 func repoSummary(cmd *cobra.Command, args []string) error {
+	getEnvValues()
+
 	client := github.NewClient(nil)
 	options := &github.PullRequestListOptions{
 		State:       "all",
 		Sort:        "created",
 		Direction:   "desc",
-		ListOptions: github.ListOptions{PerPage: 1000},
+		ListOptions: github.ListOptions{PerPage: 100},
 	}
 
 	var openCount, closedCount, inProgressCount int
@@ -50,6 +42,7 @@ func repoSummary(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
+		fmt.Println("PULL COUNT", len(pulls))
 
 		for _, pull := range pulls {
 			if pull.UpdatedAt.After(time.Now().AddDate(0, 0, -7)) {
@@ -71,25 +64,26 @@ func repoSummary(cmd *cobra.Command, args []string) error {
 				}
 			}
 		}
-		fmt.Printf("From:: %s", fromEmail)
-		fmt.Printf("To:: %s", toEmail)
-		fmt.Printf("Summary of repo %s/%s for last week\n", repoOwner, repoName)
-		fmt.Printf("Open Pull Requests count = %d\n", openCount)
-		for _, title := range openTitles {
-			fmt.Printf("  %s\n", title)
-		}
-		fmt.Printf("Closed Pull Requests count = %d\n", closedCount)
-		for _, title := range closedTitles {
-			fmt.Printf("  %s\n", title)
-		}
-		fmt.Printf("In Progress Pull Requests count = %d\n", inProgressCount)
-		for _, title := range inProgressTitles {
-			fmt.Printf("  %s\n", title)
-		}
 		if resp.NextPage == 0 {
 			break
 		}
 		options.Page = resp.NextPage
+	}
+
+	fmt.Printf("From:: %s\n", fromEmail)
+	fmt.Printf("To:: %s\n", toEmail)
+	fmt.Printf("Summary of repo %s/%s for last week\n", repoOwner, repoName)
+	fmt.Printf("Open Pull Requests count = %d\n", openCount)
+	for _, title := range openTitles {
+		fmt.Printf("  %s\n", title)
+	}
+	fmt.Printf("Closed Pull Requests count = %d\n", closedCount)
+	for _, title := range closedTitles {
+		fmt.Printf("  %s\n", title)
+	}
+	fmt.Printf("In Progress Pull Requests count = %d\n", inProgressCount)
+	for _, title := range inProgressTitles {
+		fmt.Printf("  %s\n", title)
 	}
 
 	return nil

@@ -11,7 +11,7 @@ import (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "repo",
+	Use:   "repo-util",
 	Short: "CLI tool for repo related operations",
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
